@@ -15,6 +15,7 @@ export default function CrearServicioScreen({ navigation }) {
   const { agregarServicio } = useService(); // accede a la función del context
 
   const [nombre, setNombre] = useState('');
+  const [contacto, setContacto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tipo, setTipo] = useState('');
   const [fuente, setFuente] = useState('');
@@ -24,7 +25,7 @@ export default function CrearServicioScreen({ navigation }) {
   const fuentes = ['Instagram', 'Facebook', 'WhatsApp'];
 
   const handleGuardar = async () => {
-    if (!nombre || !descripcion || !tipo || !fuente || !ubicacion) {
+    if (!nombre || !descripcion || !tipo || !fuente || !ubicacion || !contacto) {
       Alert.alert('Error', 'Por favor completa todos los campos.');
       return;
     }
@@ -34,6 +35,7 @@ export default function CrearServicioScreen({ navigation }) {
       descripcion,
       tipo,
       fuente,
+      contacto,
       ubicacion,
       calificaciones: []
     };
@@ -99,6 +101,14 @@ export default function CrearServicioScreen({ navigation }) {
           </TouchableOpacity>
         ))}
       </View>
+
+      <Text style={styles.label}>Contacto</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Ej: juan@unab.edu"
+        value={contacto}
+        onChangeText={setContacto}
+      />
 
       <Text style={styles.label}>Red social de contacto</Text>
       <View style={styles.filterRow}>

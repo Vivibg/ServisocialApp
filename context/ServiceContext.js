@@ -13,6 +13,7 @@ export function ServiceProvider({ children }) {
       try {
         const querySnapshot = await getDocs(collection(db, 'servicios'));
         const datos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('Servicios cargados:', datos);
         setServicios(datos);
       } catch (error) {
         console.error('Error cargando servicios:', error);
@@ -24,6 +25,7 @@ export function ServiceProvider({ children }) {
 
   const agregarServicio = async (nuevoServicio) => {
     try {
+      console.log('Nuevo servicio a agregar:', nuevoServicio);
       const docRef = await addDoc(collection(db, 'servicios'), nuevoServicio);
       setServicios(prev => [...prev, { id: docRef.id, ...nuevoServicio }]);
     } catch (error) {
