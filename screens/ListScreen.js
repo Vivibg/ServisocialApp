@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,31 @@ import {
   TextInput
 } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
-import services from '../data/services';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 
 export default function ListScreen({ navigation }) {
+  const [servicios, setServicios] = useState([]);
   const [tipoFiltro, setTipoFiltro] = useState('');
   const [fuenteFiltro, setFuenteFiltro] = useState('');
   const [busqueda, setBusqueda] = useState('');
+
+  useEffect(() => {
+    const cargarServicios = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'servicios'));
+        const data = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setServicios(data);
+      } catch (error) {
+        console.error('Error al cargar servicios:', error);
+      }
+    };
+
+    cargarServicios();
+  }, []);
 
   const obtenerPromedio = (calificaciones) => {
     if (!calificaciones || calificaciones.length === 0) return 0;
@@ -21,8 +40,8 @@ export default function ListScreen({ navigation }) {
     return Math.round(total / calificaciones.length);
   };
 
-  const serviciosFiltrados = services.filter((item) => {
-    const coincideBusqueda = item.nombre.toLowerCase().includes(busqueda.toLowerCase());
+  const serviciosFiltrados = servicios.filter((item) => {
+    const coincideBusqueda = item.nombre?.toLowerCase().includes(busqueda.toLowerCase());
     const coincideTipo = tipoFiltro === '' || item.tipo === tipoFiltro;
     const coincideFuente = fuenteFiltro === '' || item.fuente === fuenteFiltro;
     return coincideBusqueda && coincideTipo && coincideFuente;
@@ -48,7 +67,6 @@ export default function ListScreen({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.heading}>Servicios disponibles</Text>
 
-      {/* 🔍 Buscador */}
       <TextInput
         placeholder="Buscar por nombre..."
         style={styles.input}
@@ -56,17 +74,13 @@ export default function ListScreen({ navigation }) {
         onChangeText={setBusqueda}
       />
 
-      {/* 🎛️ Filtros por tipo */}
       <Text style={styles.section}>Filtrar por tipo:</Text>
       <View style={styles.filterRow}>
         {["Gasfitería", "Electricidad", "Construcción"].map((tipo) => (
           <TouchableOpacity
             key={tipo}
-            style={[
-              styles.chip,
-              tipoFiltro === tipo && styles.chipSelected
-            ]}
-            onPress={() => setTipoFiltro(tipoFiltro === tipo ? "" : tipo)}
+            style={[styles.chip, tipoFiltro === tipo && styles.chipSelected]}
+            onPress={() => setTipoFiltro(tipoFiltro === tipo ? '' : tipo)}
           >
             <MaterialCommunityIcons
               name={
@@ -83,17 +97,13 @@ export default function ListScreen({ navigation }) {
         ))}
       </View>
 
-      {/* 🎛️ Filtros por fuente */}
       <Text style={styles.section}>Filtrar por red social:</Text>
       <View style={styles.filterRow}>
         {["Instagram", "Facebook", "WhatsApp"].map((fuente) => (
           <TouchableOpacity
             key={fuente}
-            style={[
-              styles.chip,
-              fuenteFiltro === fuente && styles.chipSelected
-            ]}
-            onPress={() => setFuenteFiltro(fuenteFiltro === fuente ? "" : fuente)}
+            style={[styles.chip, fuenteFiltro === fuente && styles.chipSelected]}
+            onPress={() => setFuenteFiltro(fuenteFiltro === fuente ? '' : fuente)}
           >
             <FontAwesome
               name={
@@ -110,75 +120,11 @@ export default function ListScreen({ navigation }) {
         ))}
       </View>
 
-      {/* 📋 Lista filtrada */}
       <FlatList
         data={serviciosFiltrados}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={renderItem}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: '#fff',
-    flex: 1
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 15
-  },
-  input: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15
-  },
-  card: {
-    padding: 15,
-    backgroundColor: '#f2f2f2',
-    marginBottom: 10,
-    borderRadius: 10
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold'
-  },
-  ubicacion: {
-    marginTop: 5,
-    fontStyle: 'italic'
-  },
-  section: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-    fontSize: 16,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 15,
-    marginTop: 5,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ccc',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    marginRight: 8,
-    marginBottom: 8
-  },
-  chipSelected: {
-    backgroundColor: '#00838f'
-  },
-  chipText: {
-    color: '#fff',
-    fontWeight: 'bold'
-  }
-});

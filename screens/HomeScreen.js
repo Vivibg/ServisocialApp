@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import servicios from '../data/services';
+import { useService } from '../context/ServiceContext';  // Ajusta el path según tu estructura
+import { useAuth } from '../context/AuthContext';
 
 const iconosPorTipo = {
   Gasfitería: <MaterialCommunityIcons name="pipe-wrench" size={28} color="#00838f" />,
@@ -24,8 +18,10 @@ const tiposDisponibles = Object.keys(iconosPorTipo);
 
 export default function HomeScreen() {
   const { usuario, salir } = useAuth();
+  const { servicios } = useService(); // Obtener servicios desde el contexto
   const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
   const navigation = useNavigation();
+
   const serviciosFiltrados = tipoSeleccionado
     ? servicios.filter(s => s.tipo === tipoSeleccionado)
     : servicios;
@@ -37,13 +33,17 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.saludo}>
-    ¡Hola {usuario || 'invitado'}! 👋
-    </Text>
-    <TouchableOpacity onPress={salir} style={styles.logoutButton}>
-    <Text style={styles.logoutText}>Cerrar sesión</Text>
-    </TouchableOpacity>
+        ¡Hola {usuario || 'invitado'}! 👋
+      </Text>
+      <TouchableOpacity onPress={() => navigation.navigate('NuevoServicio')}>
+        <Text style={styles.newServiceText}>¿Tienes un nuevo servicio? ¡Publica aquí!</Text>
+      </TouchableOpacity>
 
-    <Text style={styles.subtitulo}>Selecciona un tipo de servicio</Text>
+      <TouchableOpacity onPress={salir} style={styles.logoutButton}>
+        <Text style={styles.logoutText}>Cerrar sesión</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.subtitulo}>Selecciona un tipo de servicio</Text>
 
       <FlatList
         data={tiposDisponibles}
@@ -77,10 +77,9 @@ export default function HomeScreen() {
         keyExtractor={(item) => item}
       />
 
-      {/* Lista de servicios filtrados */}
       <FlatList
         data={serviciosFiltrados}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.servicio}
@@ -98,12 +97,32 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  titulo: {
-    fontSize: 26,
+  saludo: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#00838f',
+    marginBottom: 6
+  },
+  subtitulo: {
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 12
+  },
+  logoutButton: {
+    alignSelf: 'flex-end',
+    padding: 8,
     marginBottom: 10,
-    textAlign: 'center',
+  },
+  logoutText: {
+    color: '#d32f2f',
+    fontSize: 14,
+    fontWeight: 'bold'
+  },
+  newServiceText: {
+    color: '#00838f',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4
   },
   chipsContainer: { paddingBottom: 10 },
   chipBox: {
@@ -143,29 +162,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 10,
   },
-  saludo: {
-  fontSize: 24,
-  fontWeight: 'bold',
-  color: '#00838f',
-  marginBottom: 6
-},
-subtitulo: {
-  fontSize: 16,
-  color: '#555',
-  marginBottom: 12
-},
-logoutButton: {
-  alignSelf: 'flex-end',
-  padding: 8,
-  marginBottom: 10,
-},
-
-logoutText: {
-  color: '#d32f2f',
-  fontSize: 14,
-  fontWeight: 'bold'
-},
-
   nombre: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   descripcion: { fontSize: 14, color: '#666', marginTop: 4 },
   contacto: { fontSize: 14, color: '#999', marginTop: 2 },
