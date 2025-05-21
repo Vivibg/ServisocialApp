@@ -39,8 +39,12 @@ export default function HomeScreen() {
       <Text style={styles.saludo}>
     ¡Hola {usuario || 'invitado'}! 👋
     </Text>
+    <TouchableOpacity onPress={() => navigation.navigate('NuevoServicio')}>
+      <Text style={styles.newServiceText}>¿Tienes un nuevo servicio? ¡Publica aquí!</Text>
+    </TouchableOpacity>
+
     <TouchableOpacity onPress={salir} style={styles.logoutButton}>
-    <Text style={styles.logoutText}>Cerrar sesión</Text>
+      <Text style={styles.logoutText}>Cerrar sesión</Text>
     </TouchableOpacity>
 
     <Text style={styles.subtitulo}>Selecciona un tipo de servicio</Text>
@@ -165,6 +169,13 @@ logoutText: {
   fontSize: 14,
   fontWeight: 'bold'
 },
+
+  newServiceText: {
+    color: '#00838f',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 4
+  },
 
   nombre: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   descripcion: { fontSize: 14, color: '#666', marginTop: 4 },
