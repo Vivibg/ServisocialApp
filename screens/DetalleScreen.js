@@ -24,9 +24,8 @@ const StarRating = ({ rating, onRate, size = 24 }) => (
 );
 
 export default function DetalleScreen({ route, navigation }) {
-  // Log de usuario en cada render para debug
   useEffect(() => {
-    console.log('Usuario detectado en render:', usuario);
+    // Observar usuario autenticado
   });
   const [proveedor, setProveedor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -66,11 +65,9 @@ export default function DetalleScreen({ route, navigation }) {
       }
     }
     loadProveedor();
-    // eslint-disable-next-line
   }, []);
 
   const handleCalificar = async () => {
-    console.log('Intentando comentar...');
     if (!comentario.trim() || calificacion === 0) {
       Alert.alert('Error', 'Por favor, escribe un comentario y selecciona una calificación');
       return;
@@ -78,7 +75,6 @@ export default function DetalleScreen({ route, navigation }) {
     setSending(true);
     try {
       const user = auth.currentUser;
-      console.log('Usuario actual:', user);
       if (!user) {
         Alert.alert('Error', 'Debes iniciar sesión para comentar');
         setSending(false);

@@ -27,7 +27,7 @@ npx expo start
 Escanea el QR con la app Expo Go en tu teléfono.
 
 ## Variables y configuración
-La configuración de Firebase está en `config/firebaseConfig.js`.
+Copia `.env.example` a `.env` y completa las credenciales de Firebase.
 
 ## Deploy a Firebase Hosting
 1. **Build web:**

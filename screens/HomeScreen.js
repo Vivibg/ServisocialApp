@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from '../config/firebaseConfig';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions, LayoutAnimation, Button } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome5, MaterialCommunityIcons, Feather, MaterialIcons } from '@expo/vector-icons';
-import { useService } from '../context/ServiceContext';
+import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
 const windowWidth = Dimensions.get('window').width;
@@ -85,6 +84,9 @@ export default function HomeScreen() {
                 <Text style={{ color: '#fff', fontSize: 14, marginTop: 4 }}>
                   Bienvenido, {usuario.email}
                 </Text>
+              )}
+              {usuario && usuario.uid && (
+                <Button title="Cerrar sesión" onPress={salir} color="#d32f2f" />
               )}
             </View>
             <FlatList
