@@ -1,168 +1,209 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { app } from '../config/firebaseConfig';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions, LayoutAnimation, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome5, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { useService } from '../context/ServiceContext';  // Ajusta el path según tu estructura
+import { FontAwesome5, MaterialCommunityIcons, Feather, MaterialIcons } from '@expo/vector-icons';
+import { useService } from '../context/ServiceContext';
 import { useAuth } from '../context/AuthContext';
 
+const windowWidth = Dimensions.get('window').width;
+
 const iconosPorTipo = {
-  Gasfitería: <MaterialCommunityIcons name="pipe-wrench" size={28} color="#00838f" />,
-  Reparaciones: <FontAwesome5 name="tools" size={28} color="#00838f" />,
-  Electricidad: <MaterialCommunityIcons name="flash" size={28} color="#00838f" />,
-  Carpintería: <MaterialCommunityIcons name="hammer" size={28} color="#00838f" />,
-  Limpieza: <MaterialCommunityIcons name="broom" size={28} color="#00838f" />,
-  Pintura: <MaterialCommunityIcons name="format-paint" size={28} color="#00838f" />,
+  Gasfitería: <MaterialCommunityIcons name="pipe-wrench" size={48} color="#00838f" />,
+  Reparaciones: <FontAwesome5 name="tools" size={48} color="#00838f" />,
+  Electricidad: <MaterialCommunityIcons name="flash" size={48} color="#00838f" />,
+  Carpintería: <MaterialCommunityIcons name="hammer" size={48} color="#00838f" />,
+  Limpieza: <MaterialCommunityIcons name="broom" size={48} color="#00838f" />,
+  Pintura: <MaterialCommunityIcons name="format-paint" size={48} color="#00838f" />,
 };
 
 const tiposDisponibles = Object.keys(iconosPorTipo);
 
 export default function HomeScreen() {
-  const { usuario, salir } = useAuth();
-  const { servicios } = useService(); // Obtener servicios desde el contexto
-  const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
+  const [usuario, setUsuario] = useState(null);
+  const { salir } = useAuth();
   const navigation = useNavigation();
 
-  const serviciosFiltrados = tipoSeleccionado
-    ? servicios.filter(s => s.tipo === tipoSeleccionado)
-    : servicios;
+  const [cargandoUsuario, setCargandoUsuario] = useState(true);
 
-  const irADetalle = (servicio) => {
-    navigation.navigate('Detalle', { servicio });
-  };
+  useEffect(() => {
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      setUsuario(user);
+      setCargandoUsuario(false);
+    });
+    return () => {
+      setCargandoUsuario(false);
+      unsubscribe();
+    };
+  }, []);
+
+  // Datos de servicios para mostrar en el grid
+  const serviciosGrid = [
+    { tipo: 'Gasfitería', icon: iconosPorTipo['Gasfitería'] },
+    { tipo: 'Reparaciones', icon: iconosPorTipo['Reparaciones'] },
+    { tipo: 'Electricidad', icon: iconosPorTipo['Electricidad'] },
+    { tipo: 'Carpintería', icon: iconosPorTipo['Carpintería'] },
+    { tipo: 'Limpieza', icon: iconosPorTipo['Limpieza'] },
+    { tipo: 'Pintura', icon: iconosPorTipo['Pintura'] },
+  ];
+
+  const renderServicio = ({ item }) => (
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => navigation.navigate('Lista', { tipoServicio: item.tipo })}
+      activeOpacity={0.8}
+    >
+      <View style={styles.iconContainer}>
+        {item.icon}
+      </View>
+      <Text style={styles.cardText}>{item.tipo}</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.saludo}>
-        ¡Hola {usuario || 'invitado'}! 👋
-      </Text>
-      <TouchableOpacity onPress={() => navigation.navigate('NuevoServicio')}>
-        <Text style={styles.newServiceText}>¿Tienes un nuevo servicio? ¡Publica aquí!</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={salir} style={styles.logoutButton}>
-        <Text style={styles.logoutText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.subtitulo}>Selecciona un tipo de servicio</Text>
-
-      <FlatList
-        data={tiposDisponibles}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsContainer}
-        renderItem={({ item }) => {
-          const seleccionado = tipoSeleccionado === item;
-          return (
-            <TouchableOpacity
-              style={[styles.chipBox, seleccionado && styles.chipBoxActivo]}
-              onPress={() =>
-                setTipoSeleccionado(seleccionado ? null : item)
-              }
-            >
-              {iconosPorTipo[item]}
-              {seleccionado && (
-                <Feather
-                  name="check-circle"
-                  size={16}
-                  color="#00838f"
-                  style={styles.checkIcon}
-                />
+    <>
+      {cargandoUsuario ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#00838f', fontSize: 18 }}>Cargando usuario...</Text>
+        </View>
+      ) : (
+        <>
+          {(!usuario || !usuario.uid) && (
+            <Button
+              title="Iniciar sesión"
+              onPress={() => navigation.navigate('Login')}
+              color="#00838f"
+            />
+          )}
+          <View style={styles.container}>
+            {/* Header azul */}
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>ServiSocial</Text>
+              {usuario && usuario.email && (
+                <Text style={{ color: '#fff', fontSize: 14, marginTop: 4 }}>
+                  Bienvenido, {usuario.email}
+                </Text>
               )}
-              <Text style={[styles.chipText, seleccionado && styles.chipTextActivo]}>
-                {item}
-              </Text>
-            </TouchableOpacity>
-          );
-        }}
-        keyExtractor={(item) => item}
-      />
-
-      <FlatList
-        data={serviciosFiltrados}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.servicio}
-            onPress={() => irADetalle(item)}
-          >
-            <Text style={styles.nombre}>{item.nombre}</Text>
-            <Text style={styles.descripcion}>{item.descripcion}</Text>
-            <Text style={styles.contacto}>{item.contacto}</Text>
-          </TouchableOpacity>
-        )}
-      />
-    </View>
+            </View>
+            <FlatList
+              data={serviciosGrid}
+              renderItem={renderServicio}
+              keyExtractor={(item) => item.tipo}
+              numColumns={2}
+              contentContainerStyle={styles.grid}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        </>
+      )}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  saludo: {
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafb',
+  },
+  header: {
+    width: '100%',
+    backgroundColor: '#0097a7',
+    paddingTop: 40,
+    paddingBottom: 20,
+    alignItems: 'center',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    marginBottom: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerTitle: {
+    color: '#fff',
     fontSize: 24,
     fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  grid: {
+    padding: 12,
+    justifyContent: 'center',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    margin: 10,
+    flex: 1,
+    minWidth: (windowWidth / 2) - 36,
+    maxWidth: (windowWidth / 2) - 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 28,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    position: 'relative',
+  },
+  cardActive: {
+    borderWidth: 2,
+    borderColor: '#00bcd4',
+  },
+  iconContainer: {
+    marginBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  checkCircle: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.10,
+    shadowRadius: 2,
+  },
+  cardText: {
+    fontSize: 16,
     color: '#00838f',
-    marginBottom: 6
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 4,
   },
   subtitulo: {
     fontSize: 16,
     color: '#555',
-    marginBottom: 12
+    marginBottom: 12,
   },
   logoutButton: {
     alignSelf: 'flex-end',
     padding: 8,
     marginBottom: 10,
   },
-  logoutText: {
-    color: '#d32f2f',
-    fontSize: 14,
-    fontWeight: 'bold'
-  },
-  newServiceText: {
-    color: '#00838f',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4
-  },
-  chipsContainer: { paddingBottom: 10 },
-  chipBox: {
-    width: 72,
-    height: 72,
-    backgroundColor: '#e0f7fa',
-    borderRadius: 12,
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 6,
-    position: 'relative'
+    padding: 12,
   },
-  chipBoxActivo: {
-    borderWidth: 2,
-    borderColor: '#00838f',
+  chip: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 8,
+    margin: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   chipText: {
-    fontSize: 11,
-    color: '#444',
-    fontWeight: '500',
-    marginTop: 4
+    fontSize: 16,
+    marginLeft: 8,
   },
-  chipTextActivo: {
-    color: '#00838f',
-    fontWeight: 'bold'
-  },
-  checkIcon: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#fff',
-    borderRadius: 10
-  },
-  servicio: {
-    backgroundColor: '#f5f5f5',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  nombre: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  descripcion: { fontSize: 14, color: '#666', marginTop: 4 },
-  contacto: { fontSize: 14, color: '#999', marginTop: 2 },
 });
